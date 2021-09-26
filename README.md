@@ -8,7 +8,7 @@ I made this software for Educational purposes only.<br>
 
 # How to use
 - Step 1<br>
-Get your user token, if you don't know how to get your token check out this tutorial by me [Click here]
+Get your user token, if you don't know how to get your token check out this tutorial by me, [Click Here](https://github.com/yayeen/Discord-selfbot/wiki/How-to-get-your-Discord-Account-Token)
 
 - Step 2<br>
 Go to config.json file and put your token or edit your prefix to your preference
