@@ -89,6 +89,8 @@ selfbot.once('ready', async () => {
                                    Developer: qwertyuiopasdfghjklzxcvbnm#1312
 
                                               Version: ${version}
+                                              
+                                      Logged in as: ${selfbot.user.tag}
     `))
     if(meslog === 'y'){
         console.log('                                   Message Logging: ' + chalk.green("Enabled"))
