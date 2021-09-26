@@ -1,3 +1,3 @@
 @echo off
 title Installing
-nmp i
+npm i
