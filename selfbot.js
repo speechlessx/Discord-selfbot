@@ -36,6 +36,7 @@ const selfbot = new Discord.Client() //create a new client
 const moment = require('moment') //for converting time
 const fs = require('fs') //for writing in txt files
 const readline = require('readline-sync')
+const db = require('quick.db')
 const axios = require('axios')
 const chalk = require('chalk')
 const { green, red, yellow, blue } = require('chalk') //add some color in our console
@@ -195,8 +196,8 @@ selfbot.on('message', async message => {
                 inline: true
             },
             {
-                name: 'uptime',
-                value: "Display client uptime",
+                name: 'stats',
+                value: "Display your stats and current uptime",
                 inline: true
             },
             {
@@ -376,8 +377,15 @@ selfbot.on('message', async message => {
 
         await message.channel.send(embed)
     //uptime command
-    } else if (command === 'uptime'){
+    } else if (command === 'stats'){
         await message.delete()
+        let pings = await db.get(`mentions`)
+        let msg = await db.get(`messages`)
+        let sent = await db.get(`sent`)
+        if(pings === null) pings = 0
+        if(msg === null) msg = 0
+        if(sent === null) sent = 0
+
         let days = Math.floor(selfbot.uptime / 86400000 );
         let hours = Math.floor(selfbot.uptime / 3600000 ) % 24;
         let minutes = Math.floor(selfbot.uptime / 60000) % 60;
@@ -386,6 +394,7 @@ selfbot.on('message', async message => {
         const embed = new Discord.MessageEmbed()
         .setTitle('Uptime')
         .setDescription(`\`\`\`${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds\`\`\``)
+        .addField('Stats', `📥 **Messages Received:** ${msg}\n\n📤 **Messages Sent:** ${sent}\n\n🏓 **Pings:** ${pings}\n\n**🛡 Guilds:** ${selfbot.guilds.cache.size}`)
 
         await message.channel.send(embed)
     //clear command
@@ -596,6 +605,42 @@ if(guildlog === 'y'){
         }
     })
 }
+
+//stats
+//save data when someone pinged you
+selfbot.on('message', async message => {
+    if(!message.mentions.users.first()) return
+    if(message.author.id === selfbot.user.id) return
+    if(message.mentions.users.first().id !== selfbot.user.id) return
+    let data = await db.get(`mentions`)
+    if(!data){
+        await db.set(`mentions`, 1)
+    } else {
+        await db.add(`mentions`, 1)
+    }
+})
+
+//save data when someone send a message
+selfbot.on('message', async message => {
+    if(message.author.id === selfbot.user.id) return
+    let data = await db.get(`messages`)
+    if(!data){
+        await db.set(`messages`, 1)
+    } else {
+        await db.add(`messages`, 1)
+    }
+})
+
+//save data when you send a message
+selfbot.on('message', async message => {
+    if(message.author.id !== selfbot.user.id) return
+    let data = await db.get(`sent`)
+    if(!data){
+        await db.set(`sent`, 1)
+    } else {
+        await db.add(`sent`, 1)
+    }
+})
 
 
 selfbot.login(token) //start the bot
