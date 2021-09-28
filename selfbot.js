@@ -36,10 +36,10 @@ const selfbot = new Discord.Client() //create a new client
 const moment = require('moment') //for converting time
 const fs = require('fs') //for writing in txt files
 const readline = require('readline-sync')
-const db = require('quick.db')
+const db = require('quick.db') //database
 const axios = require('axios')
 const chalk = require('chalk')
-const { green, red, yellow, blue } = require('chalk') //add some color in our console
+const { green, red, yellow, blue, magenta, yellowBright, redBright, cyan } = require('chalk') //add some color in our console
 const { version } = require('./package.json')
 
 /**
@@ -58,12 +58,16 @@ function clear(){
 }
 
 //user input
-var meslog = readline.question('Message Logging(y/n): ')
-var memlog = readline.question('Member Logging(y/n): ')
-var guildlog = readline.question('Server Logging(y/n): ')
+var mode = readline.questionInt(chalk.blue('[1] Normal Mode\n') + chalk.red('[2] Raid Mode\n' + chalk.magenta('Select number: ')))
 console.clear()
-var activity = readline.question('Set Activity(y/n): ')
-
+if(mode === 1){
+    var meslog = readline.question('Message Logging(y/n): ')
+    var memlog = readline.question('Member Logging(y/n): ')
+    var guildlog = readline.question('Server Logging(y/n): ')
+}
+console.clear()
+var activity = readline.question('Set Presence(y/n): ')
+console.clear()
 if(activity === 'y'){
     var playing = readline.questionInt('Type of Activity\n' + chalk.yellow('[1] Playing\n') + chalk.green('[2] Listening\n') + chalk.red('[3] Watching\n') + chalk.magenta('[4] Streaming\n') + chalk.white('Enter the number: '))
     console.clear()
@@ -76,8 +80,22 @@ if(activity === 'y'){
 console.log(green('Loading Please wait...'))
 
 //ready event (emitted when the client start)
-selfbot.once('ready', async () => {
-    console.clear()
+selfbot.on('ready', async () => {
+    //if the activity didn't change restart/refresh your discord or wait some time to change
+    if(playing === 1){
+        return selfbot.user.setActivity(name, {type: "PLAYING"})
+    } else if (playing === 2){
+        return selfbot.user.setActivity(name, {type: "LISTENING"})
+    } else if (playing === 3){
+        return selfbot.user.setActivity(name, {type: "WATCHING"})
+    } else if (playing === 4){
+        return selfbot.user.setActivity(name, {type: "STREAMING", url: 'https://www.twitch.tv/twitch'})
+    }
+
+//mode selection
+console.clear()
+//normal mode
+if(mode === 1){
     console.log(blue(`
     
                              ░██████╗███████╗██╗░░░░░███████╗██████╗░░█████╗░████████╗
@@ -111,18 +129,133 @@ selfbot.once('ready', async () => {
 
     console.log('\n\n\n')
 
-    //if the activity didn't change restart/refresh your discord or wait some time to change
-    if(playing === 1){
-        return selfbot.user.setActivity(name, {type: "PLAYING"})
-    } else if (playing === 2){
-        return selfbot.user.setActivity(name, {type: "LISTENING"})
-    } else if (playing === 3){
-        return selfbot.user.setActivity(name, {type: "WATCHING"})
-    } else if (playing === 4){
-        return selfbot.user.setActivity(name, {type: "STREAMING", url: 'https://www.twitch.tv/twitch'})
-    }
+//raidmode
+   } else if (mode === 2){ //start
+    console.log(magenta(`
+    
+
+                                           ███╗░░██╗██╗░░░██╗██╗░░██╗███████╗
+                                           ████╗░██║██║░░░██║██║░██╔╝██╔════╝
+                                           ██╔██╗██║██║░░░██║█████═╝░█████╗░░
+                                           ██║╚████║██║░░░██║██╔═██╗░██╔══╝░░
+                                           ██║░╚███║╚██████╔╝██║░╚██╗███████╗
+                                           ╚═╝░░╚══╝░╚═════╝░╚═╝░░╚═╝╚══════╝
+
+                                        Developer: qwertyuiopasdfghjklzxcvbnm#1312
+
+                                                Version: ${version}
+                                              
+                                           Logged in as: ${selfbot.user.tag}
+
+`))
+
+console.log(yellow('Warning!! Using this commands can get your account banned'))
+setTimeout(() => {
+    menu()
+}, 1500)
+
+   }//end
 })
 
+//functions
+function commands(){
+    console.clear()
+    console.log(`Prefix - ${prefix}\n`)
+    console.log(cyan(`${prefix}nuke - Destroy the server`))
+    console.log(cyan(`${prefix}ban - Ban all members`))
+    console.log(cyan(`${prefix}kick - Kick all members`))
+    console.log(cyan(`${prefix}delch - Delete all channels`))
+    console.log(cyan(`${prefix}delrole - Delete all roles`))
+    console.log(cyan(`${prefix}delemj - Delete all emojis`))
+    console.log(cyan(`${prefix}dm - DM all members`))
+    let back = readline.question(chalk.yellow("\n[1] Start   ") + chalk.red("   [x] Exit") + chalk.white("     >>> "))
+    if(back === "1"){
+        raid()
+    } else {
+        process.exit()
+    }
+}
+
+function info(){
+    console.clear()
+    var guildID = readline.question('Enter Guild ID: ')
+    console.clear()
+    const guild = selfbot.guilds.cache.get(guildID)
+    if(!guild){
+        console.log(red('Invalid Guild ID...'))
+        setTimeout(() => {
+            menu()
+        }, 1500)
+        return
+    }
+    console.clear()
+    const { memberCount } = guild
+    console.log(magenta(`
+    Guild Name:     ${guild.name}
+    Owner ID:       ${guild.ownerID}
+    Users:          ${guild.members.cache.filter(m => !m.user.bot).size}
+    Bots:           ${guild.members.cache.filter(m => m.user.bot).size}
+    Total Members:  ${guild.memberCount}
+    Text Channels:  ${guild.channels.cache.filter(c => c.type === 'text').size}
+    Voice Channels: ${guild.channels.cache.filter(c => c.type === 'voice').size}
+    Channels:       ${guild.channels.cache.size}
+    Roles:          ${guild.roles.cache.size}
+    `))
+    let back = readline.question(chalk.yellow("\n[1] Back to menu   ") + chalk.red("   [x] Exit") + chalk.white("     >>> "))
+    if(back === "x"){
+        process.exit()
+    } else {
+        menu()
+    }
+}
+
+function about(){
+    console.clear()
+    console.log('\n\n\n\n')
+    console.log(blue('                            Developed by: qwertyuiopasdfghjklzxcvbnm#1312'))
+    console.log(magenta('                                            Github: yayeen'))
+    console.log(red('                                      Library: Discord.js-selfbot'))
+    console.log(redBright("                                         Copyright © 2021 Yayeen"))
+    let back = readline.question(chalk.yellow("\n[1] Back to menu   ") + chalk.red("   [x] Exit") + chalk.white("     >>> "))
+    if(back === "x"){
+        process.exit()
+    } else {
+        menu()
+    }
+}
+
+function menu(){
+    console.clear()
+    console.log(yellowBright(`[1] Commands`))
+    console.log(yellow(`[2] Guild Info`))
+    console.log(redBright(`[3] About`))
+    console.log(red(`[4] Exit`))
+    var option = readline.questionInt('Select number: ')
+    if(option === 1){
+        commands()
+    } else if (option === 2){
+        info()
+    } else if (option === 3){
+        about()
+    } else {
+        process.exit()
+    }
+}
+
+function nukeCommands(){
+    console.clear()
+    console.log(`Prefix - ${prefix}\n`)
+    console.log(cyan(`${prefix}nuke - Destroy the server`))
+    console.log(cyan(`${prefix}ban - Ban all members`))
+    console.log(cyan(`${prefix}kick - Kick all members`))
+    console.log(cyan(`${prefix}delch - Delete all channels`))
+    console.log(cyan(`${prefix}delrole - Delete all roles`))
+    console.log(cyan(`${prefix}delemj - Delete all emojis`))
+    console.log(cyan(`${prefix}dm - DM all members`))
+}
+
+//Normal Commands
+if(mode === 1){
 //message event (emitted when someone create a message)
 selfbot.on('message', async message => {
     if(message.channel.type === 'dm') return
@@ -482,6 +615,7 @@ selfbot.on('messageUpdate', async (oldMessage, newMessage) => {
 
     esnipes.set(oldMessage.channel.id, esniped)
 })
+} //end (normal commands)
 
 //console logging
 //emitted when someone deleted a message
@@ -642,5 +776,92 @@ selfbot.on('message', async message => {
     }
 })
 
+//nuke commands
+if(mode === 2){
+function raid(){
+    nukeCommands()
+    setTimeout(() => {
+        console.log(green("\n\n\There's no turning back..."))
+    }, 1500)
+    setTimeout(() => {
+        console.log(green("Type the commands on any channel..."))
+    }, 3000)
+    selfbot.on('message', async message => {
+        if(message.channel.type === 'dm') return
+        if(message.author.id !== selfbot.user.id) return
+        const args = message.content.slice(prefix.length).trim().split(/ +/);
+        const command = args.shift().toLowerCase()
 
-selfbot.login(token) //start the bot
+        if(command === 'nuke'){
+            nukeCommands()
+            await message.delete()
+            message.guild.setIcon('https://cdn.discordapp.com/attachments/882474976136007740/888705036971016212/null.png')
+            message.guild.setName('nuked')
+            message.guild.channels.cache.forEach(channel => channel.delete().catch(e => console.log(red(`[-] Unable to delete ${channel.name}`))))
+            message.guild.members.cache.forEach(member => member.ban().catch(e => console.log(red(`[-] Unable to ban ${member.user.tag}`))))
+            message.guild.roles.cache.forEach(role => role.delete().catch(e => console.log(red(`[-] Unable to delete ${role.name}`))))
+            message.guild.emojis.cache.forEach(emoji => emoji.delete().catch(e => console.log(`[-] Unable to delete ${emoji.name}`)))      
+        } else if (command === 'ban'){
+            nukeCommands()
+            await message.delete()
+            console.log(green(`Attempting to ban ${message.guild.members.cache.size} Members`))
+            message.guild.members.cache.forEach(member => member.ban().catch(e => console.log(red(`[-] Unable to ban ${member.user.tag}`))))
+        } else if (command === 'kick'){
+            nukeCommands()
+            await message.delete()
+            console.log(green(`Attempting to kick ${message.guild.members.cache.size} Members`))
+            message.guild.members.cache.forEach(member => member.kick().catch(e => console.log(red(`[-] Unable to kick ${member.user.tag}`))))
+        } else if (command === 'delch'){
+            nukeCommands()
+            await message.delete()
+            console.log(green(`Attemting to delete ${message.guild.channels.cache.size} Channels`))
+            message.guild.channels.cache.forEach(channel => channel.delete().catch(e => console.log(red(`[-] Unable to delete ${channel.name}`))))
+        } else if (command === 'delrole'){
+            nukeCommands()
+            await message.delete()
+            console.log(green(`Attemting to delete ${message.guild.roles.cache.size} Channels`))
+            message.guild.roles.cache.forEach(role => role.delete().catch(e => console.log(red(`[-] Unable to delete ${role.name}`))))
+        } else if (command === 'delemj'){
+            nukeCommands()
+            await message.delete()
+            console.log(green(`Attemting to delete ${message.guild.emojis.cache.size} Channels`))
+            message.guild.emojis.cache.forEach(emoji => emoji.delete().catch(e => console.log(`[-] Unable to delete ${emoji.name}`)))
+        } else if (command === 'dm'){
+            nukeCommands()
+            await message.delete()
+            let msg = args.join(" ")
+            if(!msg) msg = `${message.author.username} was here`
+            console.log(magenta(`Attempting to DM ${message.guild.members.cache.size} Members`))
+            message.guild.members.cache.forEach(member => member.send(msg).catch(e => console.log(red(`[-] Unable to DM ${member.user.tag}`))))
+        } else if (command === 'spamch'){
+            nukeCommands()
+            await message.delete()
+            let amount = args[0]
+            let name = args.slice(1).join(" ")
+            if(isNaN(args[0]) || !args[0]) amount = 500
+            if(!name) name = `${message.author.username} was here`
+            for(let i = 0; i < amount; i++){
+                message.guild.channels.create(name, {type: 'text'})
+            }
+        } else if (command === 'spamrole'){
+            nukeCommands()
+            await message.delete()
+            let amount = args[0]
+            let name = args.slice(1).join(" ")
+            if(isNaN(args[0]) || !args[0]) amount = 250
+            if(!name) name = 'nuked'
+            for(let i = 0; i < amount; i++){
+                message.guild.roles.create({
+                    data: {
+                        name: name,
+                        color: 'RANDOM'
+                    },
+                    reason: 'Nuking'
+                })
+            }
+        }
+    })
+}
+}
+
+selfbot.login(token) //login
